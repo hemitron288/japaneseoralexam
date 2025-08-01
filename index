@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>日語入門口譯 模擬口試 (振假名切換版)</title>
+    <title>日語入門口譯 模擬口試 (增強版 v2)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -42,21 +42,29 @@
             user-select: none;
             transition: opacity 0.3s, font-size 0.3s;
         }
-        .clickable-sentence {
-            cursor: pointer;
-            transition: background-color 0.2s;
-            border-radius: 4px;
-            padding: 2px 4px;
-        }
-        .clickable-sentence:hover {
-            background-color: #e0f2fe;
-        }
-        /* New style for hiding furigana */
         .furigana-hidden rt,
         .furigana-hidden rp {
             opacity: 0;
             font-size: 0;
-            user-select: none;
+        }
+        .clickable-sentence, .clickable-answer {
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border-radius: 4px;
+        }
+        .clickable-sentence:hover, .clickable-answer:hover {
+            background-color: #e0f2fe;
+        }
+        .standard-answer {
+            font-size: 0.9em;
+            color: #718096; /* gray-500 */
+            transition: opacity 0.3s, max-height 0.3s;
+            overflow: hidden;
+            max-height: 100px;
+        }
+        .answers-hidden .standard-answer {
+            opacity: 0;
+            max-height: 0;
         }
     </style>
 </head>
@@ -65,7 +73,7 @@
     <div class="container mx-auto p-4 sm:p-6 md:p-8 max-w-4xl">
         <header class="text-center mb-6">
             <h1 class="text-2xl sm:text-3xl font-bold text-sky-800">HKU SPACE 日語入門口譯</h1>
-            <h2 class="text-xl sm:text-2xl font-semibold text-sky-700">模擬口試系統 (振假名切換版)</h2>
+            <h2 class="text-xl sm:text-2xl font-semibold text-sky-700">模擬口試系統 (增強版 v2)</h2>
         </header>
 
         <!-- Progress Bar -->
@@ -73,7 +81,17 @@
             <div id="progress-bar" class="bg-sky-600 h-2.5 rounded-full" style="width: 0%"></div>
         </div>
 
-        <main id="exam-container" class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg">
+        <main id="exam-container" class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg relative">
+            
+            <div class="absolute top-4 right-4 flex gap-2">
+                <button id="toggle-furigana-btn" class="p-2 text-gray-500 hover:text-sky-600 hover:bg-gray-100 rounded-full transition-colors duration-200 hidden" title="顯示/隱藏振假名">
+                    <!-- Icon will be set by JS -->
+                </button>
+                <button id="toggle-answers-btn" class="p-2 text-gray-500 hover:text-sky-600 hover:bg-gray-100 rounded-full transition-colors duration-200 hidden" title="顯示/隱藏答案">
+                    <!-- Icon will be set by JS -->
+                </button>
+            </div>
+
 
             <!-- Step 1: Introduction -->
             <div id="step-1" data-step class="active">
@@ -98,37 +116,11 @@
 
             <!-- Step 2: Reading Aloud -->
             <div id="step-2" data-step>
-                <h3 class="text-2xl font-bold mb-2 text-gray-700">第一部分：文章朗讀 (30秒)</h3>
-                <p class="text-gray-500 mb-4">請朗讀以下文章。點擊單一句子可單獨播放。點擊「播放全文」可聽取電腦朗讀。</p>
-                <div id="reading-article-container" class="p-4 border rounded-lg bg-gray-50 mb-4">
-                    <h4 id="article-title" class="text-xl font-semibold mb-2 jp-text"></h4>
-                    <div id="article-content" class="text-lg leading-relaxed jp-text"></div>
+                <h3 class="text-2xl font-bold mb-2 text-gray-700">第一部分：文章朗讀 (每篇30秒)</h3>
+                <p class="text-gray-500 mb-4">請朗讀以下所有文章。您需要為每篇文章單獨錄音。</p>
+                <div id="reading-articles-container" class="space-y-8">
+                    <!-- Articles will be injected here -->
                 </div>
-                <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
-                     <div class="flex gap-2 flex-wrap">
-                         <button id="play-article-btn" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors duration-300 flex items-center">
-                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" /></svg>
-                             播放全文
-                         </button>
-                          <button id="switch-article-btn" class="bg-gray-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-600 transition-colors duration-300 flex items-center">
-                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 110 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.885-.666A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566z" clip-rule="evenodd" /></svg>
-                             切換文章
-                         </button>
-                         <button id="toggle-furigana-btn" class="bg-teal-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-teal-600 transition-colors duration-300 flex items-center">
-                            <!-- Icon will be set by JS -->
-                         </button>
-                     </div>
-                    <div id="timer" class="text-2xl font-bold text-red-500">00:30</div>
-                </div>
-                <button id="start-reading-btn" class="w-full bg-red-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-red-700 transition-colors duration-300 flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
-                    開始錄音
-                </button>
-                <div id="reading-loader" class="mt-4 hidden flex-col items-center">
-                    <div class="loader"></div>
-                    <p class="mt-2 text-gray-500">計時與辨識中...</p>
-                </div>
-                <p id="reading-transcript-display" class="mt-3 p-2 bg-gray-100 rounded-md min-h-[40px] jp-text"></p>
                 <div class="mt-8 flex justify-end">
                     <button onclick="handleNavigation('next')" class="bg-sky-600 text-white font-bold py-2 px-5 rounded-lg hover:bg-sky-700">下一部分 &rarr;</button>
                 </div>
@@ -137,13 +129,9 @@
             <!-- Step 3: Article Questions -->
             <div id="step-3" data-step>
                 <h3 class="text-2xl font-bold mb-2 text-gray-700">第二部分：文章問答</h3>
-                <p class="text-gray-500 mb-4">請參考上方文章，回答下列問題。</p>
-                <div id="article-reference-container" class="p-4 border rounded-lg bg-gray-50 mb-4">
-                    <h4 id="article-reference-title" class="text-xl font-semibold mb-2 jp-text"></h4>
-                    <div id="article-reference-content" class="text-base leading-relaxed jp-text text-gray-600"></div>
-                </div>
-                <div id="article-q-container" class="space-y-6">
-                    <!-- Questions will be injected here -->
+                <p class="text-gray-500 mb-4">請參考文章，回答下列所有問題。</p>
+                <div id="article-q-container" class="space-y-8">
+                    <!-- Article questions will be injected here -->
                 </div>
                 <div class="mt-8 flex justify-between">
                     <button onclick="handleNavigation('prev')" class="bg-gray-500 text-white font-bold py-2 px-5 rounded-lg hover:bg-gray-600">&larr; 上一部分</button>
@@ -154,9 +142,9 @@
             <!-- Step 4: Personal Questions -->
             <div id="step-4" data-step>
                 <h3 class="text-2xl font-bold mb-2 text-gray-700">第三部分：個人問題</h3>
-                <p class="text-gray-500 mb-4">導師將提問十題個人問題，請作答。</p>
+                <p class="text-gray-500 mb-4">導師將提問所有個人問題，請作答。</p>
                 <div id="personal-q-container" class="space-y-6">
-                    <!-- Questions will be injected here -->
+                    <!-- Personal questions will be injected here -->
                 </div>
                 <div class="mt-8 flex justify-between">
                     <button onclick="handleNavigation('prev')" class="bg-gray-500 text-white font-bold py-2 px-5 rounded-lg hover:bg-gray-600">&larr; 上一部分</button>
@@ -203,9 +191,9 @@
                     'ぜひまた<ruby>北海道<rp>(</rp><rt>ほっかいどう</rt><rp>)</rp></ruby>へ<ruby>行<rp>(</rp><rt>い</rt><rp>)</rp></ruby>きたいです。'
                 ],
                 questions: [
-                    'サントスさんはいつ北海道へ行きましたか。',
-                    'サントスさんは何回スキーをしたことがありますか。',
-                    '旅行で何をしましたか。'
+                    { q: 'サントスさんはいつ北海道へ行きましたか。', a: 'サントスさんは去年の冬、北海道へ行きました。' },
+                    { q: 'サントスさんは何回スキーをしたことがありますか。', a: 'サントスさんはスキーをしたことがありません。' },
+                    { q: '旅行で何をしましたか。', a: 'サントスさんはおいしい料理を食べたり、買い物をしたりしました。' }
                 ]
             },
             B: {
@@ -214,7 +202,7 @@
                     'わたしは<ruby>先週<rp>(</rp><rt>せんしゅう</rt><rp>)</rp></ruby>の<ruby>土曜日<rp>(</rp><rt>どようび</rt><rp>)</rp></ruby>、<ruby>友達<rp>(</rp><rt>ともだち</rt><rp>)</rp></ruby>の<ruby>田中<rp>(</rp><rt>たなか</rt><rp>)</rp></ruby>さんのおうちへ<ruby>遊<rp>(</rp><rt>あそ</rt><rp>)</rp></ruby>びに<ruby>行<rp>(</rp><rt>い</rt><rp>)</rp></ruby>きました。',
                     '<ruby>田中<rp>(</rp><rt>たなか</rt><rp>)</rp></ruby>さんの<ruby>家族<rp>(</rp><rt>かぞく</rt><rp>)</rp></ruby>は3<ruby>人<rp>(</rp><rt>にん</rt><rp>)</rp></ruby>です。',
                     '<ruby>田中<rp>(</rp><rt>たなか</rt><rp>)</rp></ruby>さん<ruby>母親<rp>(</rp><rt>ははおや</rt><rp>)</rp></ruby>と<ruby>子<rp>(</rp><rt>こ</rt><rp>)</rp></ruby>どもが1<ruby>人<rp>(</rp><rt>り</rt><rp>)</rp></ruby>います。',
-                    '<ruby>土曜日<rp>(</rp><rt>どようび</rt><rp>)</rp></ruby>の<ruby>夜<rp>(</rp><rt>よる</rt><rp>)</rp></ruby>、いっしょに<ruby>日本<rp>(</rp><rt>にほん</rt><rp>)</rp></ruby><ruby>料理<rp>(</rp><rt>りょうり</rp><rp>)</rp></ruby>を<ruby>作<rp>(</rp><rt>つく</rt><rp>)</rp></ruby>って、<ruby>食<rp>(</rp><rt>た</rp>)</rp></ruby>べました。',
+                    '<ruby>土曜日<rp>(</rp><rt>どようび</rt><rp>)</rp></ruby>の<ruby>夜<rp>(</rp><rt>よる</rt><rp>)</rp></ruby>、いっしょに<ruby>日本<rp>(</rp><rt>にほん</rt><rp>)</rp></ruby><ruby>料理<rp>(</rp><rt>りょうり</rt><rp>)</rp></ruby>を<ruby>作<rp>(</rp><rt>つく</rt><rp>)</rp></ruby>って、<ruby>食<rp>(</rp><rt>た</rt><rp>)</rp></ruby>べました。',
                     'ごはんを<ruby>食<rp>(</rp><rt>た</rt><rp>)</rp></ruby>べてから、<ruby>歌<rp>(</rp><rt>うた</rt><rp>)</rp></ruby>を<ruby>歌<rp>(</rp><rt>うた</rt><rp>)</rp></ruby>ったり、ゲームで<ruby>遊<rp>(</rp><rt>あそ</rt><rp>)</rp></ruby>んだりしました。',
                     '<ruby>日曜日<rp>(</rp><rt>にちようび</rt><rp>)</rp></ruby>、わたしたちは<ruby>海<rp>(</rp><rt>うみ</rt><rp>)</rp></ruby>へ<ruby>行<rp>(</rp><rt>い</rt><rp>)</rp></ruby>きました。',
                     '<ruby>週末<rp>(</rp><rt>しゅうまつ</rt><rp>)</rp></ruby>でしたから、<ruby>人<rp>(</rp><rt>ひと</rt><rp>)</rp></ruby>がたくさんいました。',
@@ -222,48 +210,93 @@
                     'おいしい<ruby>料理<rp>(</rp><rt>りょうり</rt><rp>)</rp></ruby>をたくさん<ruby>食<rp>(</rp><rt>た</rt><rp>)</rp></ruby>べて、おなかがいっぱいになりました。'
                 ],
                 questions: [
-                    'サントスさんは先週の土曜日、どこへ行きましたか。',
-                    '田中さんの家族は何人ですか。',
-                    '日曜日にどこで昼ごはんを食べましたか。'
+                    { q: 'サントスさんは先週の土曜日、どこへ行きましたか。', a: 'サントスさんは友達の田中さんのおうちへ行きました。' },
+                    { q: '田中さんの家族は何人ですか。', a: '田中さんの家族は3人です。' },
+                    { q: '日曜日にどこで昼ごはんを食べましたか。', a: '日曜日にドイツ料理のレストランで昼ごはんを食べました。' }
                 ]
             },
             C: {
                 title: '趣味 (サントス)',
                 content: [
                     'わたしの<ruby>趣味<rp>(</rp><rt>しゅみ</rt><rp>)</rp></ruby>は<ruby>映画<rp>(</rp><rt>えいが</rt><rp>)</rp></ruby>を<ruby>見<rp>(</rp><rt>み</rt><rp>)</rp></ruby>ることです。',
-                    '<ruby>週末<rp>(</rp><rt>しゅうまつ</rt><rp>)</rp></ruby>はうちで<ruby>日本<rp>(</rp><rt>にほん</rt><rp>)</rp></ruby><ruby>映画<rp>(</rp><rt>えいが</rt><rp>)</rp></ruby>や<ruby>香港<rp>(</rp><rt>ほんこん</rt><rp>)</rp></ruby><ruby>映画<rp>(</rp><rt>えいが</rt><rp>)</rp></ruby>のDVDを<ruby>見<rp>(</rp><rt>み</rt><rp>)</rp></ruby>ます。',
+                    '<ruby>週末<rp>(</rp><rt>しゅうまつ</rt><rp>)</rp></ruby>はうちで<ruby>日本<rp>(</rp><rt>にほん</rt><rp>)</rp></ruby><ruby>映画<rp>(</rp><rt>えいが</rt><rp>)</rp></ruby>や<ruby>香港<rp>(</rp><rt>ほんこん</rt><rp>)</rp></ruby><ruby>映画<rp>(</rp><rt>えいが</rt><rp>)</rp></ruby>のDVDを<ruby>見<rp>(</rp><rt>み</rp><rp>)</rp></ruby>ます。',
                     '<ruby>今<rp>(</rp><rt>いま</rp><rp>)</rp></ruby>、わたしはDVDを200<ruby>枚<rp>(</rp><rt>まい</rt><rp>)</rp></ruby>ぐらい<ruby>持<rp>(</rp><rt>も</rt><rp>)</rp></ruby>っています。',
                     'わたしは<ruby>香港<rp>(</rp><rt>ほんこん</rt><rp>)</rp></ruby><ruby>映画<rp>(</rp><rt>えいが</rt><rp>)</rp></ruby>より<ruby>日本<rp>(</rp><rt>にほん</rt><rp>)</rp></ruby><ruby>映画<rp>(</rp><rt>えいが</rt><rp>)</rp></ruby>のほうが<ruby>好<rp>(</rp><rt>す</rt><rp>)</rp></ruby>きですから、<ruby>日本<rp>(</rp><rt>にほん</rt><rp>)</rp></ruby><ruby>映画<rp>(</rp><rt>えいが</rt><rp>)</rp></ruby>のDVDがたくさんあります。',
                     '<ruby>日本<rp>(</rp><rt>にほん</rt><rp>)</rp></ruby><ruby>映画<rp>(</rp><rt>えいが</rt><rp>)</rp></ruby>はおもしろいですから、<ruby>映画<rp>(</rp><rt>えいが</rt><rp>)</rp></ruby>で<ruby>日本語<rp>(</rp><rt>にほんご</rt><rp>)</rp></ruby>を<ruby>勉強<rp>(</rp><rt>べんきょう</rt><rp>)</rp></ruby>します。',
                     '<ruby>日本語<rp>(</rp><rt>にほんご</rt><rp>)</rp></ruby>が<ruby>少<rp>(</rp><rt>すこ</rt><rp>)</rp></ruby>し<ruby>上手<rp>(</rp><rt>じょうず</rt><rp>)</rp></ruby>になりましたから、<ruby>日本<rp>(</rp><rt>にほん</rt><rp>)</rp></ruby>へ<ruby>行<rp>(</rp><rt>い</rt><rp>)</rp></ruby>って、<ruby>日本人<rp>(</rp><rt>にほんじん</rt><rp>)</rp></ruby>と<ruby>話<rp>(</rp><rt>はな</rt><rp>)</rp></ruby>したい、<ruby>日本<rp>(</rp><rt>にほん</rt><rp>)</rp></ruby>で<ruby>映画<rp>(</rp><rt>えいが</rt><rp>)</rp></ruby>を<ruby>見<rp>(</rp><rt>み</rt><rp>)</rp></ruby>たいです。'
                 ],
                 questions: [
-                    'サントスさんの趣味は何ですか。',
-                    'サントスさんはDVDを何枚ぐらい持っていますか。',
-                    'どうしてサントスさんは映画で日本語を勉強しますか。'
+                    { q: 'サントスさんの趣味は何ですか。', a: 'サントスさんの趣味は映画を見ることです。' },
+                    { q: 'サントスさんはDVDを何枚ぐらい持っていますか。', a: 'サントスさんはDVDを200枚ぐらい持っています。' },
+                    { q: 'どうしてサントスさんは映画で日本語を勉強しますか。', a: '日本映画はおもしろいですから、サントスさんは映画で日本語を勉強します。' }
                 ]
             }
         };
 
         const personalQuestions = [
-            '〜さんは学生/会社員ですか。', '〜さんのうちはどちらですか。', '〜さんの誕生日はいつですか。', '〜さんの休みは何曜日/いつですか。', 'どこへ/何で/何時に/いつ/誰と/どうやって行きましたか。', '週末/日曜日/いつも 何を しますか/しましたか。', 'どこで食べましたか。', '今年/去年の誕生日にプレゼントをもらいましたか。', '飛行機の切符をあげます。どこへ何をしに行きますか。', '仕事/学校は忙しいですか。', '〜はどんなところですか。', '〜はどうですか。', 'どうしてですか。', 'けさ何か食べましたか。', '〜さんは〜が好きですか。', 'どんな〜が好き/嫌いですか。(例 どんな映画が好きですか。)', '〜さんのうちに犬がいますか。', 'どのくらいかかりましたか。どのくらい行きましたか。', '〜さんは〜が いくつ/何枚/何台/何合いありますか。', '1年/1か月/1週間に何回ぐらい 〜か。', '今までのぐらい日本語を勉強しましたか。', '〜さんの家族は何人ですか。', '〜と〜どちらが好きですか。(例 犬と猫どちらが好きですか。)', '家族でだれがいちばん料理が上手ですか。', '〜さんは季節/1年でいつがいちばん好きですか。', '先週は忙しかったですか。', '〜はどうでしたか。', '〜の天気はどうでしたか。', '今何がいちばん欲しいですか。', '兄弟がいますか。', 'この週末は何をしたいですか。', '今/夏休みに/何をいちばんしたいですか。', 'どこか旅行に行きましたか。', 'この漢字の読み方を教えてください。', '今雨が降っていますか。', '日本でいちばん高い山を知っていますか。', '〜さんは働いていますか。', 'けさ起きてから、何をしましたか。', 'この試験が終わってから、何をしますか。', '〇〇をしてから、何をしますか。(例 休みの日は何をしますか。それから、〇〇をしてから、何をしますか。)', '〇〇をしてから、何をしたいですか。(例 日本へ行って、何をしたいですか。〇〇してから、何をしたいですか。)', '〇〇をしてから、何をしましたか。(例 映画を見てから、何をしましたか。)', '〜さんのうちから空港までどうやって行きますか。', '海外旅行に何を持って行かなければなりませんか。', '日曜日も働かなければなりませんか。/日曜日仕事がなくてもいいですか。', '〜さんの趣味は何ですか。', '〜さんは〜ができますか。/〜さんは〜することができますか。', '〜さんは次の誕生日に何をしたいですか。', '〜ことがありますか。', '毎晩寝るまえに、何をしますか。'
+            { q: '〜さんは学生ですか、会社員ですか。', a: 'はい、わたしは学生です。／はい、わたしは会社員です。' },
+            { q: '〜さんのうちはどちらですか。', a: 'わたしのうちは香港です。' },
+            { q: '〜さんの誕生日はいつですか。', a: 'わたしの誕生日は5月5日です。' },
+            { q: '〜さんの休みは何曜日ですか。', a: 'わたしの休みは土曜日と日曜日です。' },
+            { q: 'きのうどこへ行きましたか。', a: 'きのうデパートへ行きました。' },
+            { q: '週末いつも何をしますか。', a: '週末いつも日本語を勉強したり、映画を見たりします。' },
+            { q: 'どこで昼ごはんを食べますか。', a: '会社の食堂で昼ごはんを食べます。' },
+            { q: '去年の誕生日にプレゼントをもらいましたか。', a: 'はい、家族に腕時計をもらいました。' },
+            { q: '飛行機の切符をあげます。どこへ何をしに行きたいですか。', a: '日本へ桜を見に行きたいです。' },
+            { q: '仕事は忙しいですか。', a: 'はい、とても忙しいです。／いいえ、あまり忙しくないです。' },
+            { q: '香港はどんなところですか。', a: '香港はにぎやかなところです。' },
+            { q: '日本語の勉強はどうですか。', a: '日本語の勉強は面白いですが、難しいです。' },
+            { q: 'どうして日本語を勉強しますか。', a: '日本の文化が好きですから、日本語を勉強します。' },
+            { q: 'けさ何か食べましたか。', a: 'はい、パンを食べました。／いいえ、何も食べませんでした。' },
+            { q: '〜さんはスポーツが好きですか。', a: 'はい、好きです。／いいえ、あまり好きじゃないです。' },
+            { q: 'どんな映画が好きですか。', a: 'わたしはアクション映画が好きです。' },
+            { q: '〜さんのうちに猫がいますか。', a: 'はい、います。／いいえ、いません。' },
+            { q: 'うちから学校までどのくらいかかりますか。', a: 'うちから学校まで電車で１時間ぐらいかかります。' },
+            { q: '〜さんはTシャツが何枚ありますか。', a: 'わたしはTシャツが10枚ぐらいあります。' },
+            { q: '一週間に何回ぐらい日本語を勉強しますか。', a: '一週間に3回ぐらい日本語を勉強します。' },
+            { q: '今までどのくらい日本語を勉強しましたか。', a: '今まで一年ぐらい日本語を勉強しました。' },
+            { q: '〜さんの家族は何人ですか。', a: 'わたしの家族は4人です。父と母と兄がいます。' },
+            { q: '犬と猫とどちらが好きですか。', a: 'わたしは犬のほうが好きです。' },
+            { q: '家族でだれがいちばん料理が上手ですか。', a: '家族で母がいちばん料理が上手です。' },
+            { q: '一年でいつがいちばん好きですか。', a: 'わたしは一年で秋がいちばん好きです。' },
+            { q: '先週は忙しかったですか。', a: 'はい、先週はとても忙しかったです。' },
+            { q: 'きのうの晩ご飯はどうでしたか。', a: 'きのうの晩ご飯はとてもおいしかったです。' },
+            { q: 'きのうの天気はどうでしたか。', a: 'きのうはいい天気でした。' },
+            { q: '今何がいちばん欲しいですか。', a: '今新しいパソコンがいちばん欲しいです。' },
+            { q: '兄弟がいますか。', a: 'はい、姉が一人います。／いいえ、兄弟がいません。' },
+            { q: 'この週末は何をしたいですか。', a: 'この週末は友達と買い物に行きたいです。' },
+            { q: '夏休みに何をいちばんしたいですか。', a: '夏休みに旅行がいちばんしたいです。' },
+            { q: 'どこか旅行に行ったことがありますか。', a: 'はい、日本へ行ったことがあります。' },
+            { q: 'この漢字の読み方を教えてください。', a: '（画面の漢字を指して）それは「〇〇」と読みます。' },
+            { q: '今雨が降っていますか。', a: 'はい、降っています。／いいえ、降っていません。' },
+            { q: '日本でいちばん高い山を知っていますか。', a: 'はい、知っています。富士山です。' },
+            { q: '〜さんは働いていますか。', a: 'はい、IMCで働いています。' },
+            { q: 'けさ起きてから、何をしましたか。', a: 'けさ起きてから、シャワーを浴びて、朝ごはんを食べました。' },
+            { q: 'この試験が終わってから、何をしますか。', a: 'この試験が終わってから、レストランで晩ご飯を食べます。' },
+            { q: '休みの日は何をしますか。', a: '休みの日はうちで音楽を聞いたり、本を読んだりします。' },
+            { q: '日本へ行って、何をしたいですか。', a: '日本へ行って、寿司を食べて、買い物をしたいです。' },
+            { q: '映画を見てから、何をしましたか。', a: '映画を見てから、友達と喫茶店でコーヒーを飲みました。' },
+            { q: '〜さんのうちから空港までどうやって行きますか。', a: 'うちから空港までバスで行きます。' },
+            { q: '海外旅行に何を持って行かなければなりませんか。', a: 'パスポートとお金を持って行かなければなりません。' },
+            { q: '日曜日も働かなければなりませんか。', a: 'いいえ、働かなくてもいいです。' },
+            { q: '〜さんの趣味は何ですか。', a: 'わたしの趣味は音楽です。' },
+            { q: '〜さんはピアノを弾くことができますか。', a: 'はい、できます。／いいえ、できません。' },
+            { q: '〜さんは次の誕生日に何をしたいですか。', a: '次の誕生日に家族とレストランで食事をしたいです。' },
+            { q: '馬に乗ったことがありますか。', a: 'はい、あります。／いいえ、一度もありません。' },
+            { q: '毎晩寝るまえに、何をしますか。', a: '毎晩寝るまえに、日本語を勉強します。' }
         ];
+
 
         // --- STATE ---
         let currentStep = 1;
-        let currentArticleIndex = 0;
         let userName = 'ティム';
-        let selectedArticleKey;
-        let selectedArticle;
-        let readingTranscript = '';
-        let articleQuestionTranscripts = [];
-        let personalQuestionTranscripts = [];
-        let selectedPersonalQuestions = [];
-        let timerInterval;
-        let examResults = {};
-        let isReadingAloud = false;
-        let japaneseVoice = null;
+        let readingTranscripts = {};
+        let articleQuestionTranscripts = {};
+        let personalQuestionTranscripts = {};
+        let timerIntervals = {};
+        let isAnswersVisible = false;
         let isFuriganaVisible = true;
+        let japaneseVoice = null;
 
         // --- SPEECH API ---
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -279,27 +312,16 @@
 
         // --- DOM ELEMENTS ---
         const mainContainer = document.getElementById('exam-container');
+        const toggleAnswersBtn = document.getElementById('toggle-answers-btn');
+        const toggleFuriganaBtn = document.getElementById('toggle-furigana-btn');
         const progressBar = document.getElementById('progress-bar');
         const steps = document.querySelectorAll('[data-step]');
         const startExamBtn = document.getElementById('start-exam-btn');
         const compatibilityCheck = document.getElementById('compatibility-check');
         const userNameInput = document.getElementById('user-name');
         
-        const articleTitle = document.getElementById('article-title');
-        const articleContent = document.getElementById('article-content');
-        const playArticleBtn = document.getElementById('play-article-btn');
-        const switchArticleBtn = document.getElementById('switch-article-btn');
-        const toggleFuriganaBtn = document.getElementById('toggle-furigana-btn');
-        const startReadingBtn = document.getElementById('start-reading-btn');
-        const timerEl = document.getElementById('timer');
-        const readingLoader = document.getElementById('reading-loader');
-        const readingTranscriptDisplay = document.getElementById('reading-transcript-display');
-
-        const articleReferenceContainer = document.getElementById('article-reference-container');
-        const articleReferenceTitle = document.getElementById('article-reference-title');
-        const articleReferenceContent = document.getElementById('article-reference-content');
+        const readingArticlesContainer = document.getElementById('reading-articles-container');
         const articleQContainer = document.getElementById('article-q-container');
-
         const personalQContainer = document.getElementById('personal-q-container');
         
         const finishExamBtn = document.getElementById('finish-exam-btn');
@@ -315,9 +337,7 @@
             if (japaneseVoice) return;
             const voices = window.speechSynthesis.getVoices();
             japaneseVoice = voices.find(voice => voice.lang === 'ja-JP');
-            if (!japaneseVoice) {
-                 console.warn("Japanese voice not found. Using default.");
-            }
+            if (!japaneseVoice) console.warn("Japanese voice not found. Using default.");
         }
         
         function updateProgress() {
@@ -336,246 +356,243 @@
         function goToStep(stepNumber) {
             currentStep = stepNumber;
             steps.forEach(step => {
-                if (parseInt(step.id.split('-')[1]) === currentStep) {
-                    step.classList.add('active');
-                } else {
-                    step.classList.remove('active');
-                }
+                step.classList.toggle('active', parseInt(step.id.split('-')[1]) === currentStep);
             });
 
-            if (currentStep === 3) {
-                articleReferenceTitle.innerHTML = selectedArticle.title;
-                articleReferenceContent.innerHTML = selectedArticle.content.join(' ');
-            }
-            if(currentStep === 4) {
-                renderPersonalQuestions();
-            }
+            const showToggleButtons = currentStep >= 2 && currentStep <= 4;
+            toggleAnswersBtn.classList.toggle('hidden', !showToggleButtons);
+            toggleFuriganaBtn.classList.toggle('hidden', !showToggleButtons);
 
             updateProgress();
         }
 
-        function speak(text, lang = 'ja-JP') {
+        function speak(text) {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
-                
                 loadJapaneseVoice();
-
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = text;
                 const clone = tempDiv.cloneNode(true);
                 clone.querySelectorAll('rt, rp').forEach(el => el.remove());
-                const cleanText = clone.textContent || clone.innerText || '';
-
+                const cleanText = clone.textContent || '';
                 const utterance = new SpeechSynthesisUtterance(cleanText);
-                utterance.lang = lang;
+                utterance.lang = 'ja-JP';
                 utterance.rate = 0.9;
-
-                if (japaneseVoice) {
-                    utterance.voice = japaneseVoice;
-                }
-
+                if (japaneseVoice) utterance.voice = japaneseVoice;
                 window.speechSynthesis.speak(utterance);
             } else {
-                console.error('抱歉，您的瀏覽器不支援語音合成功能。');
+                console.error('Browser does not support Speech Synthesis.');
             }
         }
 
         function startRecognition(onResultCallback, onEndCallback) {
             if (!isCompatible) return;
-            try {
-                recognition.abort();
-            } catch(e) { /* Ignore */ }
-            
+            try { recognition.abort(); } catch(e) {}
             let finalTranscript = '';
             recognition.onresult = (event) => {
                 let interimTranscript = '';
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    if (event.results[i].isFinal) {
-                        finalTranscript += event.results[i][0].transcript;
-                    } else {
-                        interimTranscript += event.results[i][0].transcript;
-                    }
+                    if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
+                    else interimTranscript += event.results[i][0].transcript;
                 }
                 onResultCallback(finalTranscript + interimTranscript);
             };
-            recognition.onend = () => {
-                onEndCallback(finalTranscript);
-            };
+            recognition.onend = () => onEndCallback(finalTranscript);
             recognition.start();
         }
 
         function stopRecognition() {
-            if (recognition) {
-                recognition.stop();
-            }
+            if (recognition) recognition.stop();
         }
 
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-            return array;
-        }
-        
-        function renderArticle() {
-            articleTitle.innerHTML = selectedArticle.title;
-            articleContent.innerHTML = '';
-            selectedArticle.content.forEach(sentenceHTML => {
-                const sentenceEl = document.createElement('span');
-                sentenceEl.innerHTML = sentenceHTML;
-                sentenceEl.className = 'clickable-sentence';
-                sentenceEl.onclick = () => speak(sentenceHTML);
-                articleContent.appendChild(sentenceEl);
-                articleContent.appendChild(document.createTextNode(' '));
-            });
-        }
-
-        function switchArticle() {
-            const articleKeys = Object.keys(articles);
-            currentArticleIndex = (currentArticleIndex + 1) % articleKeys.length;
-            selectedArticleKey = articleKeys[currentArticleIndex];
-            selectedArticle = articles[selectedArticleKey];
-            renderArticle();
-            updateArticleQuestions();
-        }
-        
-        function updateArticleQuestions() {
-            articleQContainer.innerHTML = '';
-            articleQuestionTranscripts = Array(selectedArticle.questions.length).fill('');
-            selectedArticle.questions.forEach((q, index) => {
-                articleQContainer.innerHTML += createQuestionHTML(q, index, 'article');
-            });
-        }
-        
-        function renderPersonalQuestions() {
-            personalQContainer.innerHTML = '';
-            selectedPersonalQuestions.forEach((q, index) => {
-                personalQContainer.innerHTML += createQuestionHTML(q, index, 'personal');
-            });
-        }
-
-        function updateFuriganaButton() {
-            if (isFuriganaVisible) {
-                toggleFuriganaBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clip-rule="evenodd" /><path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.742L2.303 6.546A10.048 10.048 0 01.458 10c1.274 4.057 5.022 7 9.542 7 1.655 0 3.213-.42 4.654-1.157l-1.753-1.753a7.001 7.001 0 01-1.442.207z" /></svg> 隱藏振假名`;
-            } else {
-                toggleFuriganaBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.022 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg> 顯示振假名`;
-            }
+        function updateToggleButton(btn, isVisible, icons) {
+            btn.innerHTML = isVisible ? icons.visible : icons.hidden;
         }
 
         function initExam() {
             currentStep = 1;
-            currentArticleIndex = 0;
             userName = 'ティム';
             userNameInput.value = userName;
-            readingTranscript = '';
-            articleQuestionTranscripts = [];
-            personalQuestionTranscripts = [];
-            examResults = {};
-            if (timerInterval) clearInterval(timerInterval);
+            readingTranscripts = {};
+            articleQuestionTranscripts = {};
+            personalQuestionTranscripts = {};
+            Object.values(timerIntervals).forEach(clearInterval);
+            timerIntervals = {};
+            
+            isAnswersVisible = false;
+            mainContainer.classList.add('answers-hidden');
+            updateToggleButton(toggleAnswersBtn, isAnswersVisible, {
+                visible: `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.866 3.866m1.212 1.212L12 12" /></svg>`,
+                hidden: `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.522 5 12 5c4.478 0 8.268 2.057 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>`
+            });
 
             isFuriganaVisible = true;
             mainContainer.classList.remove('furigana-hidden');
-            updateFuriganaButton();
+            updateToggleButton(toggleFuriganaBtn, isFuriganaVisible, {
+                visible: 'Aあ',
+                hidden: 'A'
+            });
+            toggleFuriganaBtn.classList.add('jp-text', 'font-bold');
 
-            const articleKeys = Object.keys(articles);
-            selectedArticleKey = articleKeys[currentArticleIndex];
-            selectedArticle = articles[selectedArticleKey];
 
-            renderArticle();
-            updateArticleQuestions();
-            
-            selectedPersonalQuestions = shuffleArray([...personalQuestions]).slice(0, 10);
-            personalQuestionTranscripts = Array(10).fill('');
+            renderReadingArticles();
+            renderArticleQuestions();
             renderPersonalQuestions();
-
-            timerEl.textContent = '00:30';
-            startReadingBtn.disabled = false;
-            readingLoader.classList.add('hidden');
-            readingTranscriptDisplay.textContent = '';
             
             resultsLoader.classList.add('hidden');
             resultsContent.style.display = 'none';
 
             goToStep(1);
         }
+        
+        function createClickableSentences(contentArray) {
+            let html = '';
+            contentArray.forEach(sentenceHTML => {
+                // Split by delimiters while keeping them
+                const parts = sentenceHTML.split(/([、。])/g);
+                for (let i = 0; i < parts.length; i += 2) {
+                    const textPart = parts[i];
+                    const delimiter = parts[i + 1] || '';
+                    if (textPart) {
+                        const combined = textPart + delimiter;
+                        html += `<span class="clickable-sentence" onclick="speak('${combined.replace(/'/g, "\\'")}');">${combined}</span>`;
+                    }
+                }
+            });
+            return html;
+        }
 
-        function createQuestionHTML(question, index, type) {
+        function renderReadingArticles() {
+            readingArticlesContainer.innerHTML = '';
+            Object.keys(articles).forEach((key, index) => {
+                const article = articles[key];
+                const clickableContent = createClickableSentences(article.content);
+                readingArticlesContainer.innerHTML += `
+                    <div class="p-4 border rounded-lg">
+                        <h4 class="text-xl font-semibold mb-2 jp-text">${article.title}</h4>
+                        <div class="text-lg leading-relaxed jp-text mb-4">${clickableContent}</div>
+                        <div class="flex items-center justify-between flex-wrap gap-2">
+                            <button onclick="speak('${article.content.join(' ').replace(/'/g, "\\'")}')" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600">播放全文</button>
+                            <div id="timer-reading-${index}" class="text-xl font-bold text-red-500">00:30</div>
+                        </div>
+                        <button data-type="reading" data-index="${index}" class="record-btn mt-3 w-full bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700">開始錄音</button>
+                        <div id="reading-loader-${index}" class="mt-2 hidden flex items-center"><div class="loader !w-5 !h-5"></div><p class="ml-2 text-gray-500">辨識中...</p></div>
+                        <p id="reading-transcript-${index}" class="mt-3 p-2 bg-gray-100 rounded-md min-h-[40px] jp-text"></p>
+                    </div>
+                `;
+            });
+        }
+
+        function renderArticleQuestions() {
+            articleQContainer.innerHTML = '';
+            let globalQIndex = 0;
+            Object.keys(articles).forEach(key => {
+                const article = articles[key];
+                const questionsHTML = article.questions.map((q_obj) => {
+                    articleQuestionTranscripts[globalQIndex] = '';
+                    const html = createQuestionHTML(q_obj.q, q_obj.a, globalQIndex, 'article');
+                    globalQIndex++;
+                    return html;
+                }).join('');
+
+                articleQContainer.innerHTML += `
+                    <div class="p-4 border-t first:border-t-0">
+                        <h4 class="text-xl font-semibold mb-2 jp-text">${article.title}</h4>
+                        <div class="text-base jp-text p-3 bg-gray-50 rounded-md mb-4">${article.content.join(' ')}</div>
+                        <div class="space-y-6">${questionsHTML}</div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderPersonalQuestions() {
+            personalQContainer.innerHTML = '';
+            personalQContainer.innerHTML = personalQuestions.map((q_obj, index) => {
+                personalQuestionTranscripts[index] = '';
+                return createQuestionHTML(q_obj.q, q_obj.a, index, 'personal');
+            }).join('');
+        }
+
+        function createQuestionHTML(question, answer, index, type) {
             let processedQuestion = question.replace(/〜さん/g, `${userName}さん`);
-            
             return `
                 <div class="p-4 border rounded-lg">
-                    <p class="jp-text text-lg mb-3"><strong>問題 ${index + 1}:</strong> ${processedQuestion}</p>
+                    <p class="jp-text text-lg mb-3"><strong>問題 ${type === 'article' ? index + 1 : index + 1}:</strong> ${processedQuestion}</p>
                     <div class="flex flex-col sm:flex-row gap-2">
-                        <button onclick="speak('${processedQuestion.replace(/'/g, "\\'")}')" class="flex-shrink-0 bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors duration-300 flex items-center justify-center">
-                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" /></svg>
-                            播放問題
-                        </button>
-                        <button data-recording="false" data-type="${type}" data-index="${index}" class="flex-shrink-0 bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700 transition-colors duration-300 record-btn flex items-center justify-center">
-                           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
-                            開始錄音
-                        </button>
+                        <button onclick="speak('${processedQuestion.replace(/'/g, "\\'")}')" class="flex-shrink-0 bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600">播放問題</button>
+                        <button data-recording="false" data-type="${type}" data-index="${index}" class="record-btn flex-shrink-0 bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700">開始錄音</button>
                     </div>
-                    <div id="${type}-loader-${index}" class="mt-2 hidden flex items-center">
-                        <div class="loader !w-5 !h-5"></div>
-                        <p class="ml-2 text-gray-500">辨識中...</p>
-                    </div>
+                    <div id="${type}-loader-${index}" class="mt-2 hidden flex items-center"><div class="loader !w-5 !h-5"></div><p class="ml-2 text-gray-500">辨識中...</p></div>
                     <p id="${type}-transcript-${index}" class="mt-3 p-2 bg-gray-100 rounded-md min-h-[40px] jp-text"></p>
+                    <div class="standard-answer mt-2">
+                        <p class="jp-text"><strong>標準答案：</strong><span class="clickable-answer" onclick="speak('${answer.replace(/'/g, "\\'")}');">${answer}</span></p>
+                    </div>
                 </div>
             `;
         }
         
-        function handleQuestionRecording(btn) {
+        function handleRecording(btn) {
             const type = btn.dataset.type;
             const index = parseInt(btn.dataset.index);
             const isRecording = btn.dataset.recording === 'true';
+            
+            if (isRecording) {
+                stopRecognition();
+                if (type === 'reading') clearInterval(timerIntervals[index]);
+                return;
+            }
+
+            document.querySelectorAll('.record-btn[data-recording="true"]').forEach(activeBtn => {
+                stopRecognition();
+                if (activeBtn.dataset.type === 'reading') clearInterval(timerIntervals[activeBtn.dataset.index]);
+                resetRecordButton(activeBtn);
+            });
+
+            btn.dataset.recording = 'true';
+            btn.innerHTML = `停止錄音`;
+            btn.classList.replace('bg-red-600', 'bg-yellow-500');
+            btn.classList.replace('hover:bg-red-700', 'hover:bg-yellow-600');
+            
             const loader = document.getElementById(`${type}-loader-${index}`);
             const transcriptEl = document.getElementById(`${type}-transcript-${index}`);
-            const allRecordBtns = document.querySelectorAll('.record-btn');
+            loader.classList.remove('hidden');
+            transcriptEl.textContent = '';
 
-            if (!isRecording) {
-                allRecordBtns.forEach(b => {
-                    if (b.dataset.recording === 'true') {
+            if (type === 'reading') {
+                let timeLeft = 30;
+                const timerEl = document.getElementById(`timer-reading-${index}`);
+                timerIntervals[index] = setInterval(() => {
+                    timeLeft--;
+                    if (timerEl) timerEl.textContent = `00:${timeLeft.toString().padStart(2, '0')}`;
+                    if (timeLeft <= 0) {
+                        clearInterval(timerIntervals[index]);
                         stopRecognition();
-                        b.dataset.recording = 'false';
-                        b.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg> 重新錄音`;
-                        b.classList.replace('bg-yellow-500', 'bg-red-600');
-                        b.classList.replace('hover:bg-yellow-600', 'hover:bg-red-700');
-                        document.getElementById(`${b.dataset.type}-loader-${b.dataset.index}`).classList.add('hidden');
                     }
-                    b.disabled = true;
-                });
-                
-                btn.disabled = false;
-                btn.dataset.recording = 'true';
-                btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1zm4 0a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg> 停止錄音`;
-                btn.classList.replace('bg-red-600', 'bg-yellow-500');
-                btn.classList.replace('hover:bg-red-700', 'hover:bg-yellow-600');
-                loader.classList.remove('hidden');
-                transcriptEl.textContent = '';
-                
-                startRecognition(
-                    (interimTranscript) => {
-                        transcriptEl.textContent = interimTranscript;
-                    },
-                    (finalTranscript) => {
-                        transcriptEl.textContent = finalTranscript || '(未辨識到語音)';
-                        if (type === 'article') {
-                            articleQuestionTranscripts[index] = finalTranscript;
-                        } else {
-                            personalQuestionTranscripts[index] = finalTranscript;
-                        }
-                        btn.dataset.recording = 'false';
-                        btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg> 重新錄音`;
-                        btn.classList.replace('bg-yellow-500', 'bg-red-600');
-                        btn.classList.replace('hover:bg-yellow-600', 'hover:bg-red-700');
-                        loader.classList.add('hidden');
-                        allRecordBtns.forEach(b => b.disabled = false);
-                    }
-                );
-            } else {
-                stopRecognition();
+                }, 1000);
             }
+
+            startRecognition(
+                (interim) => { transcriptEl.textContent = interim; },
+                (final) => {
+                    transcriptEl.textContent = final || '(未辨識到語音)';
+                    if (type === 'reading') readingTranscripts[index] = final;
+                    else if (type === 'article') articleQuestionTranscripts[index] = final;
+                    else personalQuestionTranscripts[index] = final;
+                    
+                    if (type === 'reading') clearInterval(timerIntervals[index]);
+                    resetRecordButton(btn);
+                }
+            );
+        }
+
+        function resetRecordButton(btn) {
+            const type = btn.dataset.type;
+            const index = parseInt(btn.dataset.index);
+            btn.dataset.recording = 'false';
+            btn.innerHTML = '重新錄音';
+            btn.classList.replace('bg-yellow-500', 'bg-red-600');
+            btn.classList.replace('hover:bg-yellow-600', 'hover:bg-red-700');
+            document.getElementById(`${type}-loader-${index}`).classList.add('hidden');
         }
         
         function calculateAndDisplayResults() {
@@ -584,110 +601,62 @@
             resultsLoader.classList.remove('hidden');
 
             setTimeout(() => {
-                let totalScore = 0;
-                examResults = {
-                    reading: {},
-                    fluency: {},
-                    articleQuestions: [],
-                    personalQuestions: []
-                };
-
-                examResults.reading = calculateReadingScore();
-                totalScore += examResults.reading.score;
-
-                examResults.fluency = calculateFluencyScore();
-                totalScore += examResults.fluency.score;
-
-                let articleQScore = 0;
-                selectedArticle.questions.forEach((q, i) => {
-                    const result = calculateQuestionScore(q, articleQuestionTranscripts[i], 10);
-                    examResults.articleQuestions.push(result);
-                    articleQScore += result.score;
+                // Reading Score (20%)
+                let totalSimilarity = 0;
+                const articleKeys = Object.keys(articles);
+                articleKeys.forEach((key, index) => {
+                    const originalText = articles[key].content.join('').replace(/<[^>]+>/g, '').replace(/\s/g, '');
+                    const transcript = readingTranscripts[index] || '';
+                    totalSimilarity += stringSimilarity(originalText, transcript.replace(/\s/g, ''));
                 });
-                totalScore += articleQScore;
+                const avgSimilarity = articleKeys.length > 0 ? totalSimilarity / articleKeys.length : 0;
+                const readingScore = Math.round(avgSimilarity * 20);
 
-                let personalQScore = 0;
-                selectedPersonalQuestions.forEach((q, i) => {
-                    const result = calculateQuestionScore(q, personalQuestionTranscripts[i], 5);
-                    examResults.personalQuestions.push(result);
-                    personalQScore += result.score;
-                });
-                totalScore += personalQScore;
+                // Article Question Score (30%)
+                let totalArticleQScore = 0;
+                const totalArticleQuestions = 9;
+                for(let i=0; i<totalArticleQuestions; i++) {
+                    totalArticleQScore += calculateIndividualQuestionScore(articleQuestionTranscripts[i] || '', 1);
+                }
+                const articleQScore = Math.round((totalArticleQScore / totalArticleQuestions) * 30);
 
-                resultsDetails.innerHTML = '';
-                resultsDetails.innerHTML += createResultCard('朗讀', examResults.reading.score, 10, examResults.reading.feedback, `您的朗讀稿：<br><span class="jp-text">${readingTranscript || '無'}</span>`);
-                resultsDetails.innerHTML += createResultCard('口譯流暢度 (模擬)', examResults.fluency.score, 10, examResults.fluency.feedback);
+                // Personal Question Score (50%)
+                let totalPersonalQScore = 0;
+                const totalPersonalQuestions = 50;
+                 for(let i=0; i<totalPersonalQuestions; i++) {
+                    totalPersonalQScore += calculateIndividualQuestionScore(personalQuestionTranscripts[i] || '', 1);
+                }
+                const personalQScore = Math.round((totalPersonalQScore / totalPersonalQuestions) * 50);
+
+                const totalScore = readingScore + articleQScore + personalQScore;
                 
-                let articleQDetails = examResults.articleQuestions.map((r, i) => createQuestionDetailHTML(selectedArticle.questions[i], articleQuestionTranscripts[i], r, 10)).join('');
-                resultsDetails.innerHTML += createResultCard('文章問答', articleQScore, 30, '根據回答的完整度評分。', articleQDetails);
-
-                let personalQDetails = examResults.personalQuestions.map((r, i) => createQuestionDetailHTML(selectedPersonalQuestions[i], personalQuestionTranscripts[i], r, 5)).join('');
-                resultsDetails.innerHTML += createResultCard('個人問題', personalQScore, 50, '根據回答的完整度評分。', personalQDetails);
-
                 totalScoreEl.textContent = `${totalScore} / 100`;
+                
+                resultsDetails.innerHTML = `
+                    ${createResultCard('朗讀 (20%)', readingScore, 20, '評分完成')}
+                    ${createResultCard('文章問答 (30%)', articleQScore, 30, '評分完成')}
+                    ${createResultCard('個人問題 (50%)', personalQScore, 50, '評分完成')}
+                `;
+
                 resultsLoader.classList.add('hidden');
                 resultsContent.style.display = 'block';
             }, 500); 
         }
 
-        function calculateReadingScore() {
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = selectedArticle.content.join(' ');
-            const cleanOriginalText = (tempDiv.textContent || '').replace(/\s/g, '');
-            const cleanTranscript = (readingTranscript || '').replace(/\s/g, '');
-            
-            if (!cleanTranscript) return { score: 0, feedback: '未偵測到朗讀內容。' };
-
-            const similarity = stringSimilarity(cleanOriginalText, cleanTranscript);
-            if (similarity > 0.8) return { score: 10, feedback: '發音非常準確，清晰，明瞭。' };
-            if (similarity > 0.6) return { score: 8, feedback: '發音比較準確、清晰。' };
-            if (similarity > 0.4) return { score: 6, feedback: '發音有一點不正確。' };
-            if (similarity > 0.2) return { score: 4, feedback: '發音不準確，有比較多的錯誤。' };
-            return { score: 2, feedback: '發音非常不正確。' };
-        }
-
-        function calculateFluencyScore() {
-            const wordsPerSecond = (readingTranscript || '').split(' ').length / 30;
-            let score, feedback;
-            if (wordsPerSecond > 2.5) { score = 10; feedback = '語速適中，非常流暢。'; }
-            else if (wordsPerSecond > 1.5) { score = 8, feedback = '語速稍慢，但比較流暢。'; }
-            else if (wordsPerSecond > 0.5) { score = 6, feedback = '語速較慢，有一些停頓。'; }
-            else if (wordsPerSecond > 0) { score = 4, feedback = '語速過慢，有明顯停頓。'; }
-            else { score = 0, feedback = '未能偵測到流暢度。'; }
-            return { score, feedback };
-        }
-
-        function calculateQuestionScore(question, transcript, maxScore) {
+        function calculateIndividualQuestionScore(transcript, maxScore) {
             const words = (transcript || '').split(' ').filter(w => w.length > 0);
-            let score = 0;
-            let feedback = '';
-
-            if (!transcript || transcript === '(未辨識到語音)') {
-                score = 0;
-                feedback = '未能回答問題。';
-            } else if (words.length <= 2) {
-                score = Math.round(maxScore * 0.4);
-                feedback = '以不完整句子或單詞回答。';
-            } else if (words.length <= 4) {
-                score = Math.round(maxScore * 0.6);
-                feedback = '以句子回答，但可能不夠完整。';
-            } else if (words.length <= 7) {
-                score = Math.round(maxScore * 0.8);
-                feedback = '以幾乎完整的句子回答。';
-            } else {
-                score = maxScore;
-                feedback = '以完整句子回答，內容詳盡。';
-            }
-            return { score, feedback };
+            if (!transcript || transcript === '(未辨識到語音)') return 0;
+            if (words.length <= 2) return maxScore * 0.4;
+            if (words.length <= 4) return maxScore * 0.6;
+            if (words.length <= 7) return maxScore * 0.8;
+            return maxScore;
         }
-        
+
         function stringSimilarity(s1, s2) {
-            let longer = s1 || '';
-            let shorter = s2 || '';
+            let longer = s1, shorter = s2;
             if (s1.length < s2.length) { longer = s2; shorter = s1; }
-            let longerLength = longer.length;
-            if (longerLength === 0) return 1.0;
-            return (longerLength - editDistance(longer, shorter)) / parseFloat(longerLength);
+            if (longer.length === 0) return 1.0;
+            return (longer.length - editDistance(longer, shorter)) / parseFloat(longer.length);
         }
 
         function editDistance(s1, s2) {
@@ -710,7 +679,7 @@
             return costs[s2.length];
         }
 
-        function createResultCard(title, score, maxScore, feedback, details = '') {
+        function createResultCard(title, score, maxScore, feedback) {
             return `
                 <div class="p-4 border rounded-lg shadow-sm">
                     <div class="flex justify-between items-center">
@@ -718,13 +687,8 @@
                         <p class="text-2xl font-bold text-sky-600">${score} <span class="text-lg text-gray-500">/ ${maxScore}</span></p>
                     </div>
                     <p class="mt-2 text-gray-600"><strong>評語:</strong> ${feedback}</p>
-                    ${details ? `<div class="mt-3 pt-3 border-t text-sm text-gray-700">${details}</div>` : ''}
                 </div>
             `;
-        }
-        
-        function createQuestionDetailHTML(question, transcript, result, maxScore) {
-             return `<div class="mt-2 p-2 bg-gray-50 rounded"><p class="jp-text text-gray-500">問題: ${question.replace(/〜さん/g, `${userName}さん`)}</p><p class="jp-text">您的回答: ${transcript || '無'}</p><p class="font-semibold">評分: ${result.score}/${maxScore} (${result.feedback})</p></div>`;
         }
 
         // --- EVENT LISTENERS ---
@@ -741,71 +705,36 @@
 
         userNameInput.addEventListener('input', (e) => {
             userName = e.target.value.trim() || 'ティム';
+            renderArticleQuestions();
+            renderPersonalQuestions();
         });
 
-        startExamBtn.addEventListener('click', () => {
-            goToStep(2);
+        startExamBtn.addEventListener('click', () => goToStep(2));
+
+        toggleAnswersBtn.addEventListener('click', () => {
+            isAnswersVisible = !isAnswersVisible;
+            mainContainer.classList.toggle('answers-hidden');
+            updateToggleButton(toggleAnswersBtn, isAnswersVisible, {
+                visible: `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.866 3.866m1.212 1.212L12 12" /></svg>`,
+                hidden: `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.522 5 12 5c4.478 0 8.268 2.057 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>`
+            });
         });
-
-        playArticleBtn.addEventListener('click', () => {
-            speak(selectedArticle.content.join(' '));
-        });
-
-        switchArticleBtn.addEventListener('click', switchArticle);
-
+        
         toggleFuriganaBtn.addEventListener('click', () => {
             isFuriganaVisible = !isFuriganaVisible;
             mainContainer.classList.toggle('furigana-hidden');
-            updateFuriganaButton();
-        });
-
-        startReadingBtn.addEventListener('click', () => {
-            if (isReadingAloud) {
-                clearInterval(timerInterval);
-                stopRecognition();
-            } else {
-                isReadingAloud = true;
-                startReadingBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1zm4 0a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg> 停止錄音`;
-                startReadingBtn.classList.replace('bg-red-600', 'bg-yellow-500');
-                startReadingBtn.classList.replace('hover:bg-red-700', 'hover:bg-yellow-600');
-                readingLoader.classList.remove('hidden');
-                let timeLeft = 30;
-                
-                timerInterval = setInterval(() => {
-                    timeLeft--;
-                    timerEl.textContent = `00:${timeLeft.toString().padStart(2, '0')}`;
-                    if (timeLeft <= 0) {
-                        clearInterval(timerInterval);
-                        stopRecognition();
-                    }
-                }, 1000);
-
-                startRecognition(
-                    (interimTranscript) => {
-                        readingTranscriptDisplay.textContent = interimTranscript;
-                    },
-                    (finalTranscript) => {
-                        isReadingAloud = false;
-                        readingTranscript = finalTranscript;
-                        clearInterval(timerInterval);
-                        startReadingBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg> 重新開始錄音`;
-                        startReadingBtn.classList.replace('bg-yellow-500', 'bg-red-600');
-                        startReadingBtn.classList.replace('hover:bg-yellow-600', 'hover:bg-red-700');
-                        readingLoader.classList.add('hidden');
-                    }
-                );
-            }
+            updateToggleButton(toggleFuriganaBtn, isFuriganaVisible, {
+                visible: 'Aあ',
+                hidden: 'A'
+            });
         });
 
         document.body.addEventListener('click', (e) => {
             const target = e.target.closest('.record-btn');
-            if (target) {
-                handleQuestionRecording(target);
-            }
+            if (target) handleRecording(target);
         });
         
         finishExamBtn.addEventListener('click', calculateAndDisplayResults);
-
         restartExamBtn.addEventListener('click', initExam);
         
     </script>
