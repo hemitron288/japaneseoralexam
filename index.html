@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>日語口譯入門 模擬口試 (iOS語音修正版)</title>
+    <title>日語入門口譯 模擬口試 (振假名切換版)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -40,6 +40,7 @@
             font-size: 0.6em;
             color: #4a5568;
             user-select: none;
+            transition: opacity 0.3s, font-size 0.3s;
         }
         .clickable-sentence {
             cursor: pointer;
@@ -50,6 +51,13 @@
         .clickable-sentence:hover {
             background-color: #e0f2fe;
         }
+        /* New style for hiding furigana */
+        .furigana-hidden rt,
+        .furigana-hidden rp {
+            opacity: 0;
+            font-size: 0;
+            user-select: none;
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -57,7 +65,7 @@
     <div class="container mx-auto p-4 sm:p-6 md:p-8 max-w-4xl">
         <header class="text-center mb-6">
             <h1 class="text-2xl sm:text-3xl font-bold text-sky-800">HKU SPACE 日語入門口譯</h1>
-            <h2 class="text-xl sm:text-2xl font-semibold text-sky-700">模擬口試系統 (iOS語音修正版)</h2>
+            <h2 class="text-xl sm:text-2xl font-semibold text-sky-700">模擬口試系統 (振假名切換版)</h2>
         </header>
 
         <!-- Progress Bar -->
@@ -97,7 +105,7 @@
                     <div id="article-content" class="text-lg leading-relaxed jp-text"></div>
                 </div>
                 <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
-                     <div class="flex gap-2">
+                     <div class="flex gap-2 flex-wrap">
                          <button id="play-article-btn" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors duration-300 flex items-center">
                              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" /></svg>
                              播放全文
@@ -105,6 +113,9 @@
                           <button id="switch-article-btn" class="bg-gray-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-600 transition-colors duration-300 flex items-center">
                              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 110 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.885-.666A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566z" clip-rule="evenodd" /></svg>
                              切換文章
+                         </button>
+                         <button id="toggle-furigana-btn" class="bg-teal-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-teal-600 transition-colors duration-300 flex items-center">
+                            <!-- Icon will be set by JS -->
                          </button>
                      </div>
                     <div id="timer" class="text-2xl font-bold text-red-500">00:30</div>
@@ -203,7 +214,7 @@
                     'わたしは<ruby>先週<rp>(</rp><rt>せんしゅう</rt><rp>)</rp></ruby>の<ruby>土曜日<rp>(</rp><rt>どようび</rt><rp>)</rp></ruby>、<ruby>友達<rp>(</rp><rt>ともだち</rt><rp>)</rp></ruby>の<ruby>田中<rp>(</rp><rt>たなか</rt><rp>)</rp></ruby>さんのおうちへ<ruby>遊<rp>(</rp><rt>あそ</rt><rp>)</rp></ruby>びに<ruby>行<rp>(</rp><rt>い</rt><rp>)</rp></ruby>きました。',
                     '<ruby>田中<rp>(</rp><rt>たなか</rt><rp>)</rp></ruby>さんの<ruby>家族<rp>(</rp><rt>かぞく</rt><rp>)</rp></ruby>は3<ruby>人<rp>(</rp><rt>にん</rt><rp>)</rp></ruby>です。',
                     '<ruby>田中<rp>(</rp><rt>たなか</rt><rp>)</rp></ruby>さん<ruby>母親<rp>(</rp><rt>ははおや</rt><rp>)</rp></ruby>と<ruby>子<rp>(</rp><rt>こ</rt><rp>)</rp></ruby>どもが1<ruby>人<rp>(</rp><rt>り</rt><rp>)</rp></ruby>います。',
-                    '<ruby>土曜日<rp>(</rp><rt>どようび</rt><rp>)</rp></ruby>の<ruby>夜<rp>(</rp><rt>よる</rt><rp>)</rp></ruby>、いっしょに<ruby>日本<rp>(</rp><rt>にほん</rt><rp>)</rp></ruby><ruby>料理<rp>(</rp><rt>りょうり</rt><rp>)</rp></ruby>を<ruby>作<rp>(</rp><rt>つく</rt><rp>)</rp></ruby>って、<ruby>食<rp>(</rp><rt>た</rp>)</rp></ruby>べました。',
+                    '<ruby>土曜日<rp>(</rp><rt>どようび</rt><rp>)</rp></ruby>の<ruby>夜<rp>(</rp><rt>よる</rt><rp>)</rp></ruby>、いっしょに<ruby>日本<rp>(</rp><rt>にほん</rt><rp>)</rp></ruby><ruby>料理<rp>(</rp><rt>りょうり</rp><rp>)</rp></ruby>を<ruby>作<rp>(</rp><rt>つく</rt><rp>)</rp></ruby>って、<ruby>食<rp>(</rp><rt>た</rp>)</rp></ruby>べました。',
                     'ごはんを<ruby>食<rp>(</rp><rt>た</rt><rp>)</rp></ruby>べてから、<ruby>歌<rp>(</rp><rt>うた</rt><rp>)</rp></ruby>を<ruby>歌<rp>(</rp><rt>うた</rt><rp>)</rp></ruby>ったり、ゲームで<ruby>遊<rp>(</rp><rt>あそ</rt><rp>)</rp></ruby>んだりしました。',
                     '<ruby>日曜日<rp>(</rp><rt>にちようび</rt><rp>)</rp></ruby>、わたしたちは<ruby>海<rp>(</rp><rt>うみ</rt><rp>)</rp></ruby>へ<ruby>行<rp>(</rp><rt>い</rt><rp>)</rp></ruby>きました。',
                     '<ruby>週末<rp>(</rp><rt>しゅうまつ</rt><rp>)</rp></ruby>でしたから、<ruby>人<rp>(</rp><rt>ひと</rt><rp>)</rp></ruby>がたくさんいました。',
@@ -220,7 +231,7 @@
                 title: '趣味 (サントス)',
                 content: [
                     'わたしの<ruby>趣味<rp>(</rp><rt>しゅみ</rt><rp>)</rp></ruby>は<ruby>映画<rp>(</rp><rt>えいが</rt><rp>)</rp></ruby>を<ruby>見<rp>(</rp><rt>み</rt><rp>)</rp></ruby>ることです。',
-                    '<ruby>週末<rp>(</rp><rt>しゅうまつ</rt><rp>)</rp></ruby>はうちで<ruby>日本<rp>(</rp><rt>にほん</rt><rp>)</rp></ruby><ruby>映画<rp>(</rp><rt>えいが</rt><rp>)</rp></ruby>や<ruby>香港<rp>(</rp><rt>ほんこん</rt><rp>)</rp></ruby><ruby>映画<rp>(</rp><rt>えいが</rt><rp>)</rp></ruby>のDVDを<ruby>見<rp>(</rp><rt>み</rp><rp>)</rp></ruby>ます。',
+                    '<ruby>週末<rp>(</rp><rt>しゅうまつ</rt><rp>)</rp></ruby>はうちで<ruby>日本<rp>(</rp><rt>にほん</rt><rp>)</rp></ruby><ruby>映画<rp>(</rp><rt>えいが</rt><rp>)</rp></ruby>や<ruby>香港<rp>(</rp><rt>ほんこん</rt><rp>)</rp></ruby><ruby>映画<rp>(</rp><rt>えいが</rt><rp>)</rp></ruby>のDVDを<ruby>見<rp>(</rp><rt>み</rt><rp>)</rp></ruby>ます。',
                     '<ruby>今<rp>(</rp><rt>いま</rp><rp>)</rp></ruby>、わたしはDVDを200<ruby>枚<rp>(</rp><rt>まい</rt><rp>)</rp></ruby>ぐらい<ruby>持<rp>(</rp><rt>も</rt><rp>)</rp></ruby>っています。',
                     'わたしは<ruby>香港<rp>(</rp><rt>ほんこん</rt><rp>)</rp></ruby><ruby>映画<rp>(</rp><rt>えいが</rt><rp>)</rp></ruby>より<ruby>日本<rp>(</rp><rt>にほん</rt><rp>)</rp></ruby><ruby>映画<rp>(</rp><rt>えいが</rt><rp>)</rp></ruby>のほうが<ruby>好<rp>(</rp><rt>す</rt><rp>)</rp></ruby>きですから、<ruby>日本<rp>(</rp><rt>にほん</rt><rp>)</rp></ruby><ruby>映画<rp>(</rp><rt>えいが</rt><rp>)</rp></ruby>のDVDがたくさんあります。',
                     '<ruby>日本<rp>(</rp><rt>にほん</rt><rp>)</rp></ruby><ruby>映画<rp>(</rp><rt>えいが</rt><rp>)</rp></ruby>はおもしろいですから、<ruby>映画<rp>(</rp><rt>えいが</rt><rp>)</rp></ruby>で<ruby>日本語<rp>(</rp><rt>にほんご</rt><rp>)</rp></ruby>を<ruby>勉強<rp>(</rp><rt>べんきょう</rt><rp>)</rp></ruby>します。',
@@ -251,7 +262,8 @@
         let timerInterval;
         let examResults = {};
         let isReadingAloud = false;
-        let japaneseVoice = null; // Variable to store the Japanese voice
+        let japaneseVoice = null;
+        let isFuriganaVisible = true;
 
         // --- SPEECH API ---
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -266,6 +278,7 @@
         }
 
         // --- DOM ELEMENTS ---
+        const mainContainer = document.getElementById('exam-container');
         const progressBar = document.getElementById('progress-bar');
         const steps = document.querySelectorAll('[data-step]');
         const startExamBtn = document.getElementById('start-exam-btn');
@@ -276,6 +289,7 @@
         const articleContent = document.getElementById('article-content');
         const playArticleBtn = document.getElementById('play-article-btn');
         const switchArticleBtn = document.getElementById('switch-article-btn');
+        const toggleFuriganaBtn = document.getElementById('toggle-furigana-btn');
         const startReadingBtn = document.getElementById('start-reading-btn');
         const timerEl = document.getElementById('timer');
         const readingLoader = document.getElementById('reading-loader');
@@ -297,13 +311,12 @@
 
         // --- FUNCTIONS ---
 
-        // Function to find and set the Japanese voice. This is crucial for iOS.
         function loadJapaneseVoice() {
-            if (japaneseVoice) return; // Don't re-search if already found
+            if (japaneseVoice) return;
             const voices = window.speechSynthesis.getVoices();
             japaneseVoice = voices.find(voice => voice.lang === 'ja-JP');
             if (!japaneseVoice) {
-                 console.warn("Japanese voice not found on this device. The system will use the default voice.");
+                 console.warn("Japanese voice not found. Using default.");
             }
         }
         
@@ -345,7 +358,7 @@
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
                 
-                loadJapaneseVoice(); // Ensure the voice is loaded
+                loadJapaneseVoice();
 
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = text;
@@ -357,7 +370,6 @@
                 utterance.lang = lang;
                 utterance.rate = 0.9;
 
-                // ** iOS FIX **: Explicitly set the voice object.
                 if (japaneseVoice) {
                     utterance.voice = japaneseVoice;
                 }
@@ -371,8 +383,8 @@
         function startRecognition(onResultCallback, onEndCallback) {
             if (!isCompatible) return;
             try {
-                recognition.abort(); // Stop any previous recognition
-            } catch(e) { /* Ignore if not started */ }
+                recognition.abort();
+            } catch(e) { /* Ignore */ }
             
             let finalTranscript = '';
             recognition.onresult = (event) => {
@@ -443,6 +455,14 @@
             });
         }
 
+        function updateFuriganaButton() {
+            if (isFuriganaVisible) {
+                toggleFuriganaBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clip-rule="evenodd" /><path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.742L2.303 6.546A10.048 10.048 0 01.458 10c1.274 4.057 5.022 7 9.542 7 1.655 0 3.213-.42 4.654-1.157l-1.753-1.753a7.001 7.001 0 01-1.442.207z" /></svg> 隱藏振假名`;
+            } else {
+                toggleFuriganaBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.022 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg> 顯示振假名`;
+            }
+        }
+
         function initExam() {
             currentStep = 1;
             currentArticleIndex = 0;
@@ -453,6 +473,10 @@
             personalQuestionTranscripts = [];
             examResults = {};
             if (timerInterval) clearInterval(timerInterval);
+
+            isFuriganaVisible = true;
+            mainContainer.classList.remove('furigana-hidden');
+            updateFuriganaButton();
 
             const articleKeys = Object.keys(articles);
             selectedArticleKey = articleKeys[currentArticleIndex];
@@ -471,7 +495,7 @@
             readingTranscriptDisplay.textContent = '';
             
             resultsLoader.classList.add('hidden');
-            resultsContent.style.display = 'none'; // Hide results until calculated
+            resultsContent.style.display = 'none';
 
             goToStep(1);
         }
@@ -510,7 +534,6 @@
             const allRecordBtns = document.querySelectorAll('.record-btn');
 
             if (!isRecording) {
-                // Stop all other recordings
                 allRecordBtns.forEach(b => {
                     if (b.dataset.recording === 'true') {
                         stopRecognition();
@@ -560,7 +583,6 @@
             resultsContent.style.display = 'none';
             resultsLoader.classList.remove('hidden');
 
-            // Simulate processing time
             setTimeout(() => {
                 let totalScore = 0;
                 examResults = {
@@ -570,15 +592,12 @@
                     personalQuestions: []
                 };
 
-                // 1. Reading Score
                 examResults.reading = calculateReadingScore();
                 totalScore += examResults.reading.score;
 
-                // 2. Fluency Score (Simulated)
                 examResults.fluency = calculateFluencyScore();
                 totalScore += examResults.fluency.score;
 
-                // 3. Article Questions Score
                 let articleQScore = 0;
                 selectedArticle.questions.forEach((q, i) => {
                     const result = calculateQuestionScore(q, articleQuestionTranscripts[i], 10);
@@ -587,7 +606,6 @@
                 });
                 totalScore += articleQScore;
 
-                // 4. Personal Questions Score
                 let personalQScore = 0;
                 selectedPersonalQuestions.forEach((q, i) => {
                     const result = calculateQuestionScore(q, personalQuestionTranscripts[i], 5);
@@ -596,7 +614,6 @@
                 });
                 totalScore += personalQScore;
 
-                // Display Results
                 resultsDetails.innerHTML = '';
                 resultsDetails.innerHTML += createResultCard('朗讀', examResults.reading.score, 10, examResults.reading.feedback, `您的朗讀稿：<br><span class="jp-text">${readingTranscript || '無'}</span>`);
                 resultsDetails.innerHTML += createResultCard('口譯流暢度 (模擬)', examResults.fluency.score, 10, examResults.fluency.feedback);
@@ -632,7 +649,6 @@
         function calculateFluencyScore() {
             const wordsPerSecond = (readingTranscript || '').split(' ').length / 30;
             let score, feedback;
-            // This is a very basic simulation based on speaking rate.
             if (wordsPerSecond > 2.5) { score = 10; feedback = '語速適中，非常流暢。'; }
             else if (wordsPerSecond > 1.5) { score = 8, feedback = '語速稍慢，但比較流暢。'; }
             else if (wordsPerSecond > 0.5) { score = 6, feedback = '語速較慢，有一些停頓。'; }
@@ -717,7 +733,6 @@
                 compatibilityCheck.classList.remove('hidden');
                 startExamBtn.disabled = true;
             }
-            // The voices are loaded asynchronously, so we need to wait for them.
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.onvoiceschanged = loadJapaneseVoice;
             }
@@ -737,6 +752,12 @@
         });
 
         switchArticleBtn.addEventListener('click', switchArticle);
+
+        toggleFuriganaBtn.addEventListener('click', () => {
+            isFuriganaVisible = !isFuriganaVisible;
+            mainContainer.classList.toggle('furigana-hidden');
+            updateFuriganaButton();
+        });
 
         startReadingBtn.addEventListener('click', () => {
             if (isReadingAloud) {
